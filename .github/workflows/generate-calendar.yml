@@ -1,0 +1,29 @@
+name: Generate Microsoft Patch Calendar
+
+on:
+  schedule:
+    - cron: "0 6 * * *"   # daily at 06:00 UTC
+  workflow_dispatch:
+
+permissions:
+  contents: write
+
+jobs:
+  build:
+    runs-on: windows-latest
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Generate ICS
+        shell: pwsh
+        run: |
+          ./scripts/Generate-WindowsPatchCalendar.ps1 -YearsAhead 2 -OutputPath "microsoft-patch-calendar.ics"
+
+      - name: Commit updated ICS
+        run: |
+          git config user.name "github-actions"
+          git config user.email "github-actions@github.com"
+          git add microsoft-patch-calendar.ics
+          git diff --staged --quiet || (git commit -m "Update Microsoft patch calendar" && git push)
